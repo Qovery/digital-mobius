@@ -33,6 +33,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "level", "info", "set log level")
 }
 
 // initConfig reads in config file and ENV variables if set.

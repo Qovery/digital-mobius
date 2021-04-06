@@ -1,119 +1,108 @@
 package cmd
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/pflag"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/watch"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"utils"
-	"log"
-	"time"
-
+	"github.com/Qovery/do-k8s-replace-notready-nodes/utils"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
+	"os"
+	"time"
 )
 
-// runCmd represents the run command
 var runCmd = &cobra.Command{
-	Use:   "run",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "do-nodes",
+	Short: "Recycle all not ready digital ocean clusters nodes",
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = setLogLevel()
-		disableDryRun, _ := cmd.Flags().GetBool("disable-dry-run")
-		dry_run := false
-		if disableDryRun {
-			dry_run = true
-		}
-		runOnKube(cmd, dry_run)
+		dryRun, _ := cmd.Flags().GetBool("disable-dry-run")
+		log.Info("Starting DO nodes recycler.")
 
+		if !dryRun {
+			log.Info("Running DO nodes recycler in dry mode.")
+		}
+
+		kubernetesConn, _ := cmd.Flags().GetString("kube-conn")
+		if kubernetesConn != "in" && kubernetesConn != "out" {
+			log.Error("Choose a Kubernetes connection method between 'in' or 'out'")
+			return
+		}
+
+		token, isTokenPresent := os.LookupEnv("DIGITAL_OCEAN_TOKEN")
+		if !isTokenPresent || token == "" {
+			log.Error("You need to add your digital ocean token to env DIGITAL_OCEAN_TOKEN")
+			return
+		}
+
+		clusterId, isIdPresent := os.LookupEnv("DIGITAL_OCEAN_CLUSTER_ID")
+		if !isIdPresent || clusterId == "" {
+			log.Error("You need to add the digital ocean cluster id to env DIGITAL_OCEAN_CLUSTER_ID")
+			return
+		}
+
+		DelayEnv, isDelay := os.LookupEnv("DELAY_NODE_CREATION")
+		if !isDelay || DelayEnv == "" {
+			log.Error("You need to add the delay in minutes which consider a node is stuck to env DELAY_NODE_CREATION")
+			return
+		}
+
+		creationDelay, err := time.ParseDuration(DelayEnv)
+		if err != nil {
+			log.Errorf("Can't parse MINUTES_DELAY_NODE_CREATION env: %s", err.Error())
+			return
+		}
+
+		runKubeCmd(cmd, kubernetesConn, creationDelay, dryRun)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(runCmd)
-
 	runCmd.Flags().BoolP("disable-dry-run", "y", false, "Disable dry run mode")
 	runCmd.Flags().StringP("kube-conn", "k", "in","Kubernetes connection method, choose between : in/out")
 }
 
-func runOnKube(cmd *cobra.Command, dryRun bool) {
-	// Kubernetes connection
+func runKubeCmd(cmd *cobra.Command, kubernetesConn string, creationDelay time.Duration, dryRun bool) {
+	k8sClientSet, _ := getKubeClient(cmd, kubernetesConn)
+	DOclient := utils.GetDOClient()
+	stuckNodes :=  getStuckNodes(k8sClientSet, creationDelay)
+	if dryRun {
+		utils.RecycleStuckNodes(DOclient, stuckNodes)
+		//log.Debug("Starting kubernetes nodes watch.")
+		//utils.WatchNodes(k8sClientSet, dynamicClient, DOclient, creationDelay)
+	}
+}
+
+func getKubeClient(cmd *cobra.Command, kubernetesConn string) (*kubernetes.Clientset,dynamic.Interface) {
 	var k8sClientSet *kubernetes.Clientset
+	var dynamicClient dynamic.Interface
 	var err error
-	KubernetesConn, _ := cmd.Flags().GetString("kube-conn")
 
-	switch KubernetesConn {
-	case "in":
-		k8sClientSet, err = AuthenticateInCluster()
-	case "out":
-		k8sClientSet, err = AuthenticateOutOfCluster()
-	default:
-		k8sClientSet, err = AuthenticateInCluster()
+	switch kubernetesConn {
+		case "out":
+			k8sClientSet, dynamicClient, err = utils.AuthenticateOutOfCluster()
+		default:
+			k8sClientSet, dynamicClient, err = utils.AuthenticateInCluster()
 	}
 	if err != nil {
-		logrus.Errorf("failed to authenticate on kubernetes with %s connection: %v", KubernetesConn, err)
+		log.Errorf("Failed to authenticate on kubernetes with %s connection: %v", kubernetesConn, err)
 	}
 
-	// check Kubernetes
-	watchNodes(k8sClientSet, dryRun)
-
+	return k8sClientSet, dynamicClient
 }
 
-func watchNodes(clientSet *kubernetes.Clientset, dryRun bool) {
-	var kubeClient clientSet.Interface
-	otythoiyotyhotpkh
-	config, err := clientcmd.DefaultClientConfig(pflag.NewFlagSet(&quot;empty&quot;, pflag.ContinueOnError)).ClientConfig()
-	if err != nil {
-		log.Printf(&quot;Error creating cluster config: %s&quot;, err)
+func getStuckNodes(clientSet *kubernetes.Clientset, creationDelay time.Duration) []utils.NodeInfos {
+	stuckNodes := utils.GetKubeStuckNodesInfos(clientSet, creationDelay)
+	if len(stuckNodes) == 0 {
+		log.Debug("There is no stuck nodes to recycle")
+		return []utils.NodeInfos{}
 	}
 
-	kubeClient, err = kclient.New(config)
-	podQueue := cache.NewEventQueue(kcache.MetaNamespaceKeyFunc)
+	log.Debugf("There is %d stuck node(s) to recycle", len(stuckNodes))
 
-	podLW := &amp;kcache.ListWatch{
-		ListFunc: func(options kapi.ListOptions) (runtime.Object, error) {
-			return kubeClient.Pods(kapi.NamespaceAll).List(options)
-		},
-		WatchFunc: func(options kapi.ListOptions) (watch.Interface, error) {
-			return kubeClient.Pods(kapi.NamespaceAll).Watch(options)
-		},
-	}
-	kcache.NewReflector(podLW, &amp;kapi.Pod{}, podQueue, 0).Run()
-
-	go func() {
-		for {
-			event, pod, err := podQueue.Pop()
-			err = handlePod(event, pod.(*kapi.Pod), kubeClient)
-			if err != nil {
-				log.Fatalf(&quot;Error capturing pod event: %s&quot;, err)
-			}
-		}
-	}()
-
-
-func handleNodes(eventType watch.EventType, nodes *kapi.Nodes, kubeClient kclient.Interface) {
-	switch eventType {
-	case watch.Added:
-		log.Printf(“Pod %s added!”, pod.Name)
-		if pod.Namespace == “namespaceWeWantToRestrict” {
-		hour := time.Now().Hour()
-		if hour &gt;= 5 &amp;&amp; hour &lt;= 10 {
-			err := kubeClient.Pods(pod.Namespace).Delete(pod.Name, &amp;kapi.DeleteOptions{})
-			if err != nil {
-				log.Printf(“Error deleting pod %s: %s”, pod.Name, err)
-			}
-		}
-	}
-	case watch.Modified:
-		log.Printf(“Pod %s modified!”, pod.Name)
-	case watch.Deleted:
-		log.Printf(“Pod %s deleted!”, pod.Name)
-	}
+	return stuckNodes
 }
+
+
+
+
