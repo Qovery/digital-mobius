@@ -1,0 +1,51 @@
+replicaCount: 1
+
+image:
+  repository: qoveryrd/digital-mobius
+  pullPolicy: IfNotPresent
+  digitalMobiusImageTag: "0.1.0"
+
+imagePullSecrets: [ ]
+nameOverride: ""
+fullnameOverride: ""
+
+environmentVariables:
+  LOG_LEVEL: "info"
+  # DIGITAL_OCEAN_TOKEN: ""
+  # DIGITAL_OCEAN_CLUSTER_ID: ""
+  # DELAY_NODE_CREATION: ""
+  # KUBECONFIG: ""
+
+enabledFeatures:
+  disableDryRun: false
+  kubernetes: "in"
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+rbac:
+  create: true
+  clusterRole: true
+  apiVersion: v1
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

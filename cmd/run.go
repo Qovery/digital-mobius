@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/Qovery/do-k8s-replace-notready-nodes/utils"
+	"fmt"
+	"github.com/Qovery/digital-mobius/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/dynamic"
@@ -11,12 +12,16 @@ import (
 )
 
 var runCmd = &cobra.Command{
-	Use:   "do-nodes",
+	Use:   "recycle",
 	Short: "Recycle all not ready digital ocean clusters nodes",
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = setLogLevel()
 		dryRun, _ := cmd.Flags().GetBool("disable-dry-run")
-		log.Info("Starting DO nodes recycler.")
+
+		fmt.Println("")
+		fmt.Printf("%s", GetAscii())
+		fmt.Println("")
+		fmt.Printf("Starting Digital Mobius %s", GetCurrentVersion())
 
 		if !dryRun {
 			log.Info("Running DO nodes recycler in dry mode.")
@@ -52,6 +57,8 @@ var runCmd = &cobra.Command{
 			return
 		}
 
+
+
 		runKubeCmd(cmd, kubernetesConn, creationDelay, dryRun)
 	},
 }
@@ -63,13 +70,13 @@ func init() {
 }
 
 func runKubeCmd(cmd *cobra.Command, kubernetesConn string, creationDelay time.Duration, dryRun bool) {
-	k8sClientSet, _ := getKubeClient(cmd, kubernetesConn)
+	k8sClientSet, dynamicClient := getKubeClient(cmd, kubernetesConn)
 	DOclient := utils.GetDOClient()
 	stuckNodes :=  getStuckNodes(k8sClientSet, creationDelay)
 	if dryRun {
 		utils.RecycleStuckNodes(DOclient, stuckNodes)
-		//log.Debug("Starting kubernetes nodes watch.")
-		//utils.WatchNodes(k8sClientSet, dynamicClient, DOclient, creationDelay)
+		log.Debug("Starting kubernetes nodes watch.")
+		utils.WatchNodes(k8sClientSet, dynamicClient, DOclient, creationDelay)
 	}
 }
 
