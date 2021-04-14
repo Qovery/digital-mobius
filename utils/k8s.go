@@ -137,7 +137,7 @@ func WatchNodes(clientSet *kubernetes.Clientset, dynClinent dynamic.Interface, D
 			emptyNode := NodeInfos{}
 			if checkedNode != emptyNode {
 				log.Infof("Recyling node %s", checkedNode)
-				//RecyleNode(DOclient, checkedNode)
+				RecyleNode(DOclient, checkedNode)
 			}
 		}
 	}

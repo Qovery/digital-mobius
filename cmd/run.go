@@ -63,13 +63,13 @@ func init() {
 }
 
 func runKubeCmd(cmd *cobra.Command, kubernetesConn string, creationDelay time.Duration, dryRun bool) {
-	k8sClientSet, _ := getKubeClient(cmd, kubernetesConn)
+	k8sClientSet, dynamicClient := getKubeClient(cmd, kubernetesConn)
 	DOclient := utils.GetDOClient()
 	stuckNodes :=  getStuckNodes(k8sClientSet, creationDelay)
 	if dryRun {
 		utils.RecycleStuckNodes(DOclient, stuckNodes)
-		//log.Debug("Starting kubernetes nodes watch.")
-		//utils.WatchNodes(k8sClientSet, dynamicClient, DOclient, creationDelay)
+		log.Debug("Starting kubernetes nodes watch.")
+		utils.WatchNodes(k8sClientSet, dynamicClient, DOclient, creationDelay)
 	}
 }
 
