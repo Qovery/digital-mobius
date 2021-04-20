@@ -1,7 +1,7 @@
 package main
 
-import  "github.com/Qovery/digital-mobius/cmd"
+import "github.com/Qovery/digital-mobius/run"
 
 func main() {
-	cmd.Execute()
+	run.Execute()
 }

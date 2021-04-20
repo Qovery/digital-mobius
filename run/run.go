@@ -1,4 +1,4 @@
-package cmd
+package run
 
 import (
 	"fmt"
@@ -21,7 +21,7 @@ var runCmd = &cobra.Command{
 		fmt.Println("")
 		fmt.Printf("%s", GetAscii())
 		fmt.Println("")
-		fmt.Printf("Starting Digital Mobius %s", GetCurrentVersion())
+		fmt.Printf("Starting Digital Mobius %s \n", GetCurrentVersion())
 
 		if !dryRun {
 			log.Info("Running DO nodes recycler in dry mode.")
@@ -53,7 +53,7 @@ var runCmd = &cobra.Command{
 
 		creationDelay, err := time.ParseDuration(DelayEnv)
 		if err != nil {
-			log.Errorf("Can't parse MINUTES_DELAY_NODE_CREATION env: %s", err.Error())
+			log.Errorf("Can't parse DELAY_NODE_CREATION env: %s", err.Error())
 			return
 		}
 
