@@ -26,7 +26,7 @@ jobs:
               exit 1
           fi
 
-          file="charts/digital-mobius/Chart.yaml"
+          file="charts/Digital-Mobius/Chart.yaml"
           if [ "v$(grep 'appVersion' $file | awk '{ print $2 }')" != "$version" ] ; then
            echo "Tag appVersion do not match application version in $file"
            exit 1
@@ -36,7 +36,7 @@ jobs:
            exit 1
           fi
 
-          file="charts/digital-mobius/values.yaml"
+          file="charts/Digital-Mobius/values.yaml"
           if [ "$(grep 'digitalMobiusImageTag' $file | awk -F'\"' '{ print $2 }')" != "$version_without_v" ] ; then
             echo "Tag version do not match application version in $file"
             exit 1
