@@ -20,7 +20,7 @@ jobs:
         run: |
           version=$(git tag | sort --version-sort | tail -1)
           version_without_v=$(echo $version | sed -r 's/v(.+)/\1/')
-          file="cmd/version.go"
+          file="run/version.go"
           if [ "v$(grep '// ci-version-check' $file | sed -r 's/.+return\s"(.+)".+/\1/')" != "$version" ] ; then
               echo "Tag version do not match application version in $file"
               exit 1
