@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/Qovery/do-k8s-replace-notready-nodes/utils"
+	"fmt"
+	"github.com/Qovery/digital-mobius/utils"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/dynamic"
@@ -11,12 +12,16 @@ import (
 )
 
 var runCmd = &cobra.Command{
-	Use:   "do-nodes",
+	Use:   "recycle",
 	Short: "Recycle all not ready digital ocean clusters nodes",
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = setLogLevel()
 		dryRun, _ := cmd.Flags().GetBool("disable-dry-run")
-		log.Info("Starting DO nodes recycler.")
+
+		fmt.Println("")
+		fmt.Printf("%s", GetAscii())
+		fmt.Println("")
+		fmt.Printf("Starting Digital Mobius %s", GetCurrentVersion())
 
 		if !dryRun {
 			log.Info("Running DO nodes recycler in dry mode.")
@@ -51,6 +56,8 @@ var runCmd = &cobra.Command{
 			log.Errorf("Can't parse MINUTES_DELAY_NODE_CREATION env: %s", err.Error())
 			return
 		}
+
+
 
 		runKubeCmd(cmd, kubernetesConn, creationDelay, dryRun)
 	},

@@ -24,7 +24,7 @@ func RecyleNode(params ...interface{}) interface {} {
 			log.Errorf("Can't recycle node %s : %s", node.NodeId, err.Error())
 		}
 
-		if response.Status != "200" {
+		if response.StatusCode != 202 {
 			log.Errorf("Request error: %s", response.String())
 		}
 	}
