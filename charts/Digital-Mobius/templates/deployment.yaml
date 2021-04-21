@@ -32,11 +32,12 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.digitalMobiusImageTag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: [ "digital-mobius", "recycle" ]
           args:
             - --level
             - {{ .Values.environmentVariables.LOG_LEVEL | default "info" }}
             {{ if eq .Values.enabledFeatures.disableDryRun true }}
-              - --disable-dry-run
+            - --disable-dry-run
             {{ end }}
             {{ if .Values.enabledFeatures.kubernetes }}
             - --kube-conn
