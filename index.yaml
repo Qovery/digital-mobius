@@ -2,6 +2,18 @@ apiVersion: v1
 entries:
   digital-mobius:
   - apiVersion: v2
+    appVersion: 0.1.2
+    created: "2021-05-03T11:12:32.940347685Z"
+    description: Automatically recycle not ready nodes on Digitial Ocean.
+    digest: f6b84b87b63224d7461260db4c86280a73ae2470e2988d0770f642b4fc715719
+    home: https://github.com/Qovery/digital-mobius
+    icon: https://github.com/Qovery/pleco/digital-mobius/main/assets/digital_mobius_logo.png
+    name: digital-mobius
+    type: application
+    urls:
+    - https://Qovery.github.io/digital-mobius/digital-mobius-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
     appVersion: 0.1.1
     created: "2021-05-03T09:50:19.752543396Z"
     description: Automatically recycle not ready nodes on Digitial Ocean.
@@ -13,4 +25,4 @@ entries:
     urls:
     - https://Qovery.github.io/digital-mobius/digital-mobius-0.1.1.tgz
     version: 0.1.1
-generated: "2021-05-03T09:50:19.751808444Z"
+generated: "2021-05-03T11:12:32.93962762Z"
