@@ -21,10 +21,10 @@ var runCmd = &cobra.Command{
 		fmt.Println("")
 		fmt.Printf("%s", GetAscii())
 		fmt.Println("")
-		fmt.Printf("Starting Digital Mobius %s \n", GetCurrentVersion())
+		log.Infof("Starting Digital Mobius %s \n", GetCurrentVersion())
 
 		if !dryRun {
-			log.Info("Running DO nodes recycler in dry mode.")
+			log.Info("Running Digital Mobius in dry mode.")
 		}
 
 		kubernetesConn, _ := cmd.Flags().GetString("kube-conn")
@@ -75,9 +75,12 @@ func runKubeCmd(cmd *cobra.Command, kubernetesConn string, creationDelay time.Du
 	stuckNodes :=  getStuckNodes(k8sClientSet, creationDelay)
 	if dryRun {
 		utils.RecycleStuckNodes(DOclient, stuckNodes)
-		log.Debug("Starting kubernetes nodes watch.")
-		utils.WatchNodes(k8sClientSet, dynamicClient, DOclient, creationDelay)
+		for {
+			utils.WatchNodes(k8sClientSet, dynamicClient, DOclient, creationDelay)
+		}
 	}
+
+	log.Info("Digital Mobius stopping...")
 }
 
 func getKubeClient(cmd *cobra.Command, kubernetesConn string) (*kubernetes.Clientset,dynamic.Interface) {

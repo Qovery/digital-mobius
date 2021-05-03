@@ -124,6 +124,8 @@ func getStuckNodes(nodelist *v12.NodeList, creationDelay time.Duration) []NodeIn
 }
 
 func WatchNodes(clientSet *kubernetes.Clientset, dynClinent dynamic.Interface, DOclient *godo.Client, creationDelay time.Duration) {
+	log.Debug("Starting kubernetes nodes watch.")
+
 	result, err := clientSet.CoreV1().Nodes().Watch(context.TODO(), v1.ListOptions{Limit: int64(1000)})
 	if err != nil {
 		log.Printf("Can't watch nodes: %s", err)
@@ -141,6 +143,8 @@ func WatchNodes(clientSet *kubernetes.Clientset, dynClinent dynamic.Interface, D
 			}
 		}
 	}
+
+	log.Debug("Closing watch channel.")
 }
 
 func getNodesInfosFromRuntineObject(dynClient dynamic.Interface, nameSpace string, obj runtime.Object) v12.Node{
