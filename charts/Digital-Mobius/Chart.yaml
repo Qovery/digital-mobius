@@ -3,6 +3,6 @@ name: digital-mobius
 description: Automatically recycle not ready nodes on Digitial Ocean.
 type: application
 home: https://github.com/Qovery/digital-mobius
-version: 0.1.1
-appVersion: 0.1.1
+version: 0.1.2
+appVersion: 0.1.2
 icon: https://github.com/Qovery/pleco/digital-mobius/main/assets/digital_mobius_logo.png
