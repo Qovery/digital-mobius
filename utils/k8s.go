@@ -97,7 +97,6 @@ func checkNode(node v12.Node, creationDelay time.Duration) NodeInfos {
 	var fullNode NodeInfos
 
 	for _, condition := range node.Status.Conditions {
-
 		if strings.EqualFold(string(condition.Type), "Ready") &&
 			strings.EqualFold(string(condition.Status), "Unknown") &&
 			!node.Spec.Unschedulable  &&
@@ -123,18 +122,20 @@ func getStuckNodes(nodelist *v12.NodeList, creationDelay time.Duration) []NodeIn
 	return stuckNodesId
 }
 
-func WatchNodes(clientSet *kubernetes.Clientset, dynClinent dynamic.Interface, DOclient *godo.Client, creationDelay time.Duration) {
+func WatchNodes(clientSet *kubernetes.Clientset, dynClient dynamic.Interface, DOclient *godo.Client, creationDelay time.Duration) {
 	log.Debug("Starting kubernetes nodes watch.")
 
 	result, err := clientSet.CoreV1().Nodes().Watch(context.TODO(), v1.ListOptions{Limit: int64(1000)})
 	if err != nil {
 		log.Printf("Can't watch nodes: %s", err)
+		time.Sleep(30 * time.Second)
+		WatchNodes(clientSet, dynClient, DOclient, creationDelay)
 	}
 
 
 	for event := range result.ResultChan() {
 		if event.Type == watch.Added || event.Type == watch.Modified {
-			node := getNodesInfosFromRuntineObject(dynClinent, "default", event.Object)
+			node := getNodesInfosFromRuntineObject(dynClient, "default", event.Object)
 			checkedNode := checkNode(node, creationDelay)
 			emptyNode := NodeInfos{}
 			if checkedNode != emptyNode {
